@@ -4,15 +4,15 @@ on:
     workflow_dispatch:
         inputs:
             factorio_version:
-                description: "Factorio version to build (e.g. 1.1.104)"
+                description: "Factorio version to build (e.g. 2.0.55)"
                 required: true
-                default: "1.1.104"
+                default: "2.0.55"
                 type: string
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME_STANDARD: ${{ github.repository_owner }}/factorio-dlc
-    IMAGE_NAME_BASE: ${{ github.repository_owner }}/factorio-base
+    IMAGE_NAME_STANDARD: ${{ lower(github.repository_owner) }}/factorio-dlc
+    IMAGE_NAME_BASE: ${{ lower(github.repository_owner) }}/factorio-base
 
 jobs:
     build-and-push:
@@ -42,7 +42,7 @@ jobs:
                   tar -xJf factorio_headless.tar.xz
                   mv factorio factorio-server
 
-            - name: Build Standard (DLC) Image
+            - name: Build DLC Image
               run: |
                   docker buildx build \
                     --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ inputs.factorio_version }} \
