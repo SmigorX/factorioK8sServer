@@ -10,9 +10,9 @@ on:
                 type: string
 
 env:
-    REGISTRY: ghcr.io
-    IMAGE_NAME_STANDARD: factorio_server/factorio-dlc
-    IMAGE_NAME_BASE: factorio_server/factorio-base
+    REGISTRY: docker.pkg.github.com
+    IMAGE_NAME_STANDARD: ${{ github.repository }}/factorio-dlc
+    IMAGE_NAME_BASE: ${{ github.repository }}/factorio-base
 
 jobs:
     build-and-push:
@@ -30,7 +30,7 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            - name: Login to GitHub Container Registry
+            - name: Login to GitHub Packages Registry
               uses: docker/login-action@v3
               with:
                   registry: ${{ env.REGISTRY }}
