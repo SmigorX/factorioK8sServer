@@ -38,7 +38,7 @@ jobs:
             - name: Download Factorio Headless
               run: |
                   echo "Downloading Factorio version ${{ inputs.factorio_version }}"
-                  wget https://www.factorio.com/get-download/${{ inputs.factorio_version }}/headless/linux64 -O factorio_headless.tar.xz
+                  wget "https://www.factorio.com/get-download/${{ inputs.factorio_version }}/headless/linux64" -O factorio_headless.tar.xz
                   tar -xJf factorio_headless.tar.xz
                   mv factorio factorio-server
 
