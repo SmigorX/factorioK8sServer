@@ -1,0 +1,46 @@
+# Factorio Configuration
+factorio:
+    version: "2.0.55" # Override via --set factorio.version=x.y.z
+    gameMode: "base" # "dlc" or "base" (without Space Age)
+    serverName: "Kubern8tes"
+    serverDescription: "Factorio server running on Kubernetes"
+    maxPlayers: 10
+    saveName: "save.zip" # .zip will be auto-added
+
+# Server Settings
+server:
+    difficulty: "normal"
+    visibility:
+        public: false
+        lan: true
+    gamePassword: "" # Set to enable password protection
+    admins: [] # List of admin usernames
+
+# Kubernetes Configuration
+persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+    existingClaim: ""
+
+resources:
+    limits:
+        cpu: "2"
+        memory: "2Gi"
+    requests:
+        cpu: "1"
+        memory: "1Gi"
+
+service:
+    type: NodePort
+    port: 34197 # Game port (UDP)
+    rconPort: 27015 # RCON port (TCP)
+
+ingress:
+    enabled: false
+    className: ""
+    hosts:
+        - host: factorio.example.com
+          paths:
+              - path: /
+                pathType: Prefix

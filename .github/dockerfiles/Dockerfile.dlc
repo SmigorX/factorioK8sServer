@@ -1,0 +1,20 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    libatomic1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY factorio-server /factorio
+
+RUN useradd -d /factorio -s /bin/bash factorio && \
+    mkdir -p /factorio/saves /factorio/config /factorio/mods && \
+    chown -R factorio:factorio /factorio
+
+EXPOSE 34197/udp 27015/tcp
+
+WORKDIR /factorio
+USER factorio
+
+ENTRYPOINT ["./bin/x64/factorio"]
+CMD ["--start-server", "save.zip"]

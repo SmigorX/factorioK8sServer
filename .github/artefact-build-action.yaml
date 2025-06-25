@@ -1,0 +1,75 @@
+name: Build Factorio Server Images
+
+on:
+    workflow_dispatch:
+        inputs:
+            factorio_version:
+                description: "Factorio version to build (e.g. 1.1.104)"
+                required: true
+                default: "1.1.104"
+                type: string
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME_STANDARD: ${{ github.repository_owner }}/factorio-dlc
+    IMAGE_NAME_BASE: ${{ github.repository_owner }}/factorio-base
+
+jobs:
+    build-and-push:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Download Factorio Headless
+              run: |
+                  echo "Downloading Factorio version ${{ inputs.factorio_version }}"
+                  wget https://www.factorio.com/get-download/${{ inputs.factorio_version }}/headless/linux64 -O factorio_headless.tar.xz
+                  tar -xJf factorio_headless.tar.xz
+                  mv factorio factorio-server
+
+            - name: Build Standard (DLC) Image
+              run: |
+                  docker buildx build \
+                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ inputs.factorio_version }} \
+                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:latest \
+                    --file .github/dockerfiles/Dockerfile.dlc \
+                    --push \
+                    .
+
+            - name: Prepare Base Game Version
+              run: |
+                  cp -r factorio-server factorio-base
+                  rm -rf factorio-base/data/elevated-rails \
+                         factorio-base/data/quality \
+                         factorio-base/data/space-age
+                  echo "Created base game version (DLC content removed)"
+
+            - name: Build Base Game Image
+              run: |
+                  docker buildx build \
+                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ inputs.factorio_version }} \
+                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:latest \
+                    --file .github/dockerfiles/Dockerfile.base \
+                    --push \
+                    .
+
+            - name: Output Image Info
+              run: |
+                  echo "Successfully built:"
+                  echo "- Standard (DLC) Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ inputs.factorio_version }}"
+                  echo "- Base Game Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ inputs.factorio_version }}"

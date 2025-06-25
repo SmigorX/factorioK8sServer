@@ -1,0 +1,7 @@
+apiVersion: v2
+name: Factorio Headless Server
+version: 0.0.1
+description: A headless factiorio server for kubernetes
+type: application
+keywords:
+    - factorio
