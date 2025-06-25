@@ -11,8 +11,8 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME_STANDARD: ${{ github.repository_owner }}/factorio-dlc
-    IMAGE_NAME_BASE: ${{ github.repository_owner }}/factorio-base
+    IMAGE_NAME_STANDARD: factorioServer/factorio-dlc
+    IMAGE_NAME_BASE: factorioServer/factorio-base
 
 jobs:
     build-and-push:
