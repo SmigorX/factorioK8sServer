@@ -11,12 +11,14 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME_STANDARD: ${{ lower(github.repository_owner) }}/factorio-dlc
-    IMAGE_NAME_BASE: ${{ lower(github.repository_owner) }}/factorio-base
+    IMAGE_NAME_STANDARD: ${{ github.repository_owner }}/factorio-dlc
+    IMAGE_NAME_BASE: ${{ github.repository_owner }}/factorio-base
 
 jobs:
     build-and-push:
         runs-on: ubuntu-latest
+        env:
+            FACTORIO_VERSION: ${{ github.event.inputs.factorio_version }}
         permissions:
             contents: read
             packages: write
@@ -37,19 +39,10 @@ jobs:
 
             - name: Download Factorio Headless
               run: |
-                  echo "Downloading Factorio version ${{ inputs.factorio_version }}"
-                  wget "https://www.factorio.com/get-download/${{ inputs.factorio_version }}/headless/linux64" -O factorio_headless.tar.xz
+                  echo "Downloading Factorio version ${{ env.FACTORIO_VERSION }}"
+                  wget "https://www.factorio.com/get-download/${{ env.FACTORIO_VERSION }}/headless/linux64" -O factorio_headless.tar.xz
                   tar -xJf factorio_headless.tar.xz
                   mv factorio factorio-server
-
-            - name: Build DLC Image
-              run: |
-                  docker buildx build \
-                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ inputs.factorio_version }} \
-                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:latest \
-                    --file .github/dockerfiles/Dockerfile.dlc \
-                    --push \
-                    .
 
             - name: Prepare Base Game Version
               run: |
@@ -59,17 +52,28 @@ jobs:
                          factorio-base/data/space-age
                   echo "Created base game version (DLC content removed)"
 
-            - name: Build Base Game Image
-              run: |
-                  docker buildx build \
-                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ inputs.factorio_version }} \
-                    --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:latest \
-                    --file .github/dockerfiles/Dockerfile.base \
-                    --push \
-                    .
+            - name: Build and push DLC image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  file: .github/dockerfiles/Dockerfile.dlc
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ env.FACTORIO_VERSION }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:latest
+
+            - name: Build and push base image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  file: .github/dockerfiles/Dockerfile.base
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ env.FACTORIO_VERSION }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:latest
 
             - name: Output Image Info
               run: |
                   echo "Successfully built:"
-                  echo "- Standard (DLC) Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ inputs.factorio_version }}"
-                  echo "- Base Game Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ inputs.factorio_version }}"
+                  echo "- Standard (DLC) Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ env.FACTORIO_VERSION }}"
+                  echo "- Base Game Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ env.FACTORIO_VERSION }}"
