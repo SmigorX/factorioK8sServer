@@ -10,7 +10,7 @@ on:
                 type: string
 
 env:
-    REGISTRY: docker.pkg.github.com
+    REGISTRY: ghcr.io
     IMAGE_NAME_STANDARD: ${{ github.repository }}/factorio-dlc
     IMAGE_NAME_BASE: ${{ github.repository }}/factorio-base
 
