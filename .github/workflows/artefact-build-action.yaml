@@ -11,8 +11,8 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME_STANDARD: ${{ github.repository }}/factorio-dlc
-    IMAGE_NAME_BASE: ${{ github.repository }}/factorio-base
+    IMAGE_NAME_STANDARD: factorio-dlc
+    IMAGE_NAME_BASE: factorio-base
 
 jobs:
     build-and-push:
@@ -44,6 +44,16 @@ jobs:
                   tar -xJf factorio_headless.tar.xz
                   mv factorio factorio-server
 
+            - name: Determine Base Game Image Tags
+              uses: docker/metadata-action@v5
+              id: base-metadata
+              with:
+                images: ghcr.io/${{ env.IMAGE_NAME_STANDARD }}
+                tags: |
+                  latest
+                  ${{github.sha}}
+                  ${{ env.FACTORIO_VERSION }}
+            
             - name: Prepare Base Game Version
               run: |
                   cp -r factorio-server factorio-base
@@ -52,25 +62,33 @@ jobs:
                          factorio-base/data/space-age
                   echo "Created base game version (DLC content removed)"
 
+            - name: Determine DLC Image Tags
+              uses: docker/metadata-action@v5
+              id: dlc-metadata
+              with:
+                images: ghcr.io/${{ env.IMAGE_NAME_STANDARD }}
+                tags: |
+                  latest
+                  ${{github.sha}}
+                  ${{ env.FACTORIO_VERSION }}
+            
             - name: Build and push DLC image
               uses: docker/build-push-action@v5
               with:
                   context: .
                   file: .github/dockerfiles/Dockerfile.dlc
                   push: true
-                  tags: |
-                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:${{ env.FACTORIO_VERSION }}
-                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_STANDARD }}:latest
-
+                  tags: ${{ steps.dlc-metadata.outputs.tags }}
+                  labels: ${{ steps.dlc-metadata.outputs.labels }}
+        
             - name: Build and push base image
               uses: docker/build-push-action@v5
               with:
                   context: .
                   file: .github/dockerfiles/Dockerfile.base
                   push: true
-                  tags: |
-                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:${{ env.FACTORIO_VERSION }}
-                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}:latest
+                  tags: ${{ steps.base-metadata.outputs.tags }}
+                  labels: ${{ steps.base-metadata.outputs.labels }}
 
             - name: Output Image Info
               run: |
