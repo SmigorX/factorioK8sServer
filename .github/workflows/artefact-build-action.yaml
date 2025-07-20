@@ -48,11 +48,13 @@ jobs:
               uses: docker/metadata-action@v5
               id: base-metadata
               with:
-                images: ghcr.io/${{ env.IMAGE_NAME_STANDARD }}
+                images: ghcr.io/${{ github.repository }}
                 tags: |
                   latest
-                  ${{github.sha}}
                   ${{ env.FACTORIO_VERSION }}
+                  base-latest
+                  base-${{github.sha}}
+                  base-${{ env.FACTORIO_VERSION }}
             
             - name: Prepare Base Game Version
               run: |
@@ -66,11 +68,11 @@ jobs:
               uses: docker/metadata-action@v5
               id: dlc-metadata
               with:
-                images: ghcr.io/${{ env.IMAGE_NAME_STANDARD }}
+                images: ghcr.io/${{ github.repository }}
                 tags: |
-                  latest
-                  ${{github.sha}}
-                  ${{ env.FACTORIO_VERSION }}
+                  dlc-latest
+                  dlc-${{github.sha}}
+                  dlc-${{ env.FACTORIO_VERSION }}
             
             - name: Build and push DLC image
               uses: docker/build-push-action@v5
