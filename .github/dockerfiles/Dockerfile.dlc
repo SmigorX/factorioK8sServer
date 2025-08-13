@@ -17,4 +17,4 @@ WORKDIR /factorio
 USER factorio
 
 ENTRYPOINT ["./bin/x64/factorio"]
-CMD ["--start-server", "save.zip"]
+CMD ["--start-server", "save.zip", "--server-settings", "server-settings.json"]
